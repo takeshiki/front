@@ -23,6 +23,7 @@ export default function RegisterPage() {
     size: "",
     contactName: "",
     email: "",
+    password: "",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -30,19 +31,42 @@ export default function RegisterPage() {
     setLoading(true)
 
     try {
-      // For testing: save to localStorage via Zustand
-      const mockCompany = {
-        id: `company-${Date.now()}`,
-        ...formData,
-        createdAt: new Date().toISOString(),
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI}/companies`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        const company = await response.json()
+        setCompany(company)
+
+        // Auto-login after registration
+        const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI}/auth/company/login`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        })
+
+        if (loginResponse.ok) {
+          const loginData = await loginResponse.json()
+          localStorage.setItem("access_token", loginData.access_token)
+          localStorage.setItem("user_type", "company")
+          router.push("/dashboard")
+        }
+      } else {
+        alert("Registration failed")
       }
-
-      setCompany(mockCompany)
-
-      // Redirect to dashboard
-      router.push("/dashboard")
     } catch (error) {
       console.error("Registration error:", error)
+      alert("Registration failed")
     } finally {
       setLoading(false)
     }
@@ -135,6 +159,19 @@ export default function RegisterPage() {
                   placeholder="john@acme.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Minimum 6 characters"
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  minLength={6}
                   required
                 />
               </div>

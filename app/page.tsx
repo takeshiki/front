@@ -13,9 +13,14 @@ export default function HomePage() {
             <Sparkles className="w-6 h-6 text-primary" />
             <span className="font-semibold text-xl">OnboardAI</span>
           </div>
-          <Link href="/register">
-            <Button>Get Started</Button>
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/login">
+              <Button variant="outline">Login</Button>
+            </Link>
+            <Link href="/register">
+              <Button>Get Started</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
