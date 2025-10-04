@@ -3,6 +3,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/a
 
 export interface Company {
   id: string
+  _id?: string
   name: string
   industry: string
   size: string
@@ -73,7 +74,7 @@ class ApiClient {
 
   // Resource endpoints
   resources = {
-    list: (companyId: string) => this.request<Resource[]>(`/resources/companies/${companyId}`),
+    list: (companyId: string) => this.request<Resource[]>(`/resources/company/${companyId}`),
 
     uploadFile: async (companyId: string, file: File, title?: string) => {
       const formData = new FormData()
@@ -107,7 +108,7 @@ class ApiClient {
 
   // Chat endpoints
   chat = {
-    listConversations: (companyId: string) => this.request<Conversation[]>(`/conversations/companies/${companyId}`),
+    listConversations: (companyId: string) => this.request<Conversation[]>(`/conversations/company/${companyId}`),
 
     createConversation: (companyId: string, title: string) =>
       this.request<Conversation>("/conversations", {
@@ -115,7 +116,7 @@ class ApiClient {
         body: JSON.stringify({ companyId, title }),
       }),
 
-    getMessages: (conversationId: string) => this.request<Message[]>(`/messages/conversations/${conversationId}`),
+    getMessages: (conversationId: string) => this.request<Message[]>(`/messages/conversation/${conversationId}`),
 
     sendMessage: (conversationId: string, content: string, role: "user" | "assistant" = "user") =>
       this.request<Message>("/messages", {
