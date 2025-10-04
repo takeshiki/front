@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useCompany } from "@/lib/hooks/use-company"
-import { MessageSquare, Upload, Sparkles, Building2, Edit, Copy, Check } from "lucide-react"
+import { MessageSquare, Upload, Sparkles, Building2, Edit, Copy, Check, Key, Users } from "lucide-react"
 
 interface EmployeeEmail {
   id: string
@@ -29,8 +29,8 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-muted-foreground mb-4">Будь ласка, увійдіть щоб отримати доступ до панелі</p>
-          <Button onClick={() => router.push("/register")}>Реєстрація</Button>
+          <p className="text-muted-foreground mb-4">Please sign in to access the dashboard</p>
+          <Button onClick={() => router.push("/register")}>Register</Button>
         </div>
       </div>
     )
@@ -115,8 +115,8 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Вітаємо, {company.contactName}!</h1>
-          <p className="text-muted-foreground">Керуйте ресурсами онбордингу та спілкуйтеся з AI-помічником.</p>
+          <h1 className="text-3xl font-bold mb-2">Welcome, {company.contactName}!</h1>
+          <p className="text-muted-foreground">Manage onboarding resources and chat with your AI assistant.</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-6 mb-6">
@@ -124,12 +124,12 @@ export default function DashboardPage() {
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <Upload className="w-10 h-10 text-primary mb-2" />
-              <CardTitle>Керування ресурсами</CardTitle>
-              <CardDescription>Завантажте PDF, документи або додайте URL для матеріалів онбордингу.</CardDescription>
+              <CardTitle>Resource Management</CardTitle>
+              <CardDescription>Upload PDFs, documents, or add URLs for onboarding materials.</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/resources">
-                <Button className="w-full">Перейти до ресурсів</Button>
+                <Button className="w-full">Go to Resources</Button>
               </Link>
             </CardContent>
           </Card>
@@ -138,12 +138,12 @@ export default function DashboardPage() {
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <MessageSquare className="w-10 h-10 text-primary mb-2" />
-              <CardTitle>AI Чат-помічник</CardTitle>
-              <CardDescription>Задавайте питання про процес онбордингу та отримуйте миттєві відповіді.</CardDescription>
+              <CardTitle>AI Chat Assistant</CardTitle>
+              <CardDescription>Ask questions about the onboarding process and get instant answers.</CardDescription>
             </CardHeader>
             <CardContent>
               <Link href="/chat">
-                <Button className="w-full">Почати чат</Button>
+                <Button className="w-full">Start Chat</Button>
               </Link>
             </CardContent>
           </Card>
@@ -152,95 +152,176 @@ export default function DashboardPage() {
         {/* Company Info */}
         <Card className="mb-6">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle>Інформація про компанію</CardTitle>
+            <CardTitle>Company Information</CardTitle>
             <Link href="/settings">
               <Button variant="outline" size="sm">
                 <Edit className="w-4 h-4 mr-2" />
-                Редагувати
+                Edit
               </Button>
             </Link>
           </CardHeader>
           <CardContent className="grid md:grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Галузь</p>
+              <p className="text-sm text-muted-foreground">Industry</p>
               <p className="font-medium capitalize">{company.industry}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Розмір компанії</p>
-              <p className="font-medium">{company.size} співробітників</p>
+              <p className="text-sm text-muted-foreground">Company Size</p>
+              <p className="font-medium">{company.size} employees</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Контактний email</p>
+              <p className="text-sm text-muted-foreground">Contact Email</p>
               <p className="font-medium">{company.email}</p>
             </div>
           </CardContent>
         </Card>
 
-        {/* Employee Email Accounts */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Корпоративні Email-акаунти</CardTitle>
-            <CardDescription>Створюйте email-акаунти для співробітників</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <form onSubmit={handleCreateEmail} className="flex gap-2">
-              <div className="flex-1">
-                <Input
-                  type="email"
-                  placeholder="employee@company.com"
-                  value={newEmail}
-                  onChange={(e) => setNewEmail(e.target.value)}
-                  required
-                />
+        {/* Employee Management Section */}
+        <div className="grid lg:grid-cols-2 gap-6">
+          {/* Company ID Card */}
+          <Card className="shadow-lg border-primary/20">
+            <CardHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <Key className="w-5 h-5 text-primary" />
+                <CardTitle>Company ID</CardTitle>
               </div>
-              <Button type="submit" disabled={loading}>
-                {loading ? "Створення..." : "Створити Email"}
-              </Button>
-            </form>
+              <CardDescription>Share this ID with employees for registration</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg p-4 border border-primary/20">
+                <Label className="text-xs text-muted-foreground mb-2 block">Your Company ID</Label>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 text-lg font-mono font-semibold text-foreground bg-background/50 px-3 py-2 rounded border select-all">
+                    {company.id || company._id || 'N/A'}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0"
+                    onClick={() => copyToClipboard(company.id || company._id || '', 'company-id')}
+                  >
+                    {copiedId === 'company-id' ? (
+                      <Check className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
 
-            {employeeEmails.length > 0 && (
-              <div className="space-y-2 mt-4">
-                <Label>Створені акаунти:</Label>
-                {employeeEmails.map((emp) => (
-                  <div key={emp.id} className="border rounded-lg p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{emp.email}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Пароль: {emp.password}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(emp.email, `email-${emp.id}`)}
-                        >
-                          {copiedId === `email-${emp.id}` ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => copyToClipboard(emp.password, `pass-${emp.id}`)}
-                        >
-                          {copiedId === `pass-${emp.id}` ? (
-                            <Check className="w-4 h-4" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900 rounded-lg p-4">
+                <div className="flex gap-3">
+                  <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                      Employee Registration
+                    </p>
+                    <p className="text-xs text-blue-700 dark:text-blue-300">
+                      Employees need this ID to sign up. Send it to your HR department or directly to new hires.
+                    </p>
+                    <a 
+                      href="/employee-register" 
+                      target="_blank"
+                      className="inline-flex items-center text-xs text-blue-600 dark:text-blue-400 hover:underline mt-2"
+                    >
+                      Open registration page →
+                    </a>
                   </div>
-                ))}
+                </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Employee Email Accounts Card */}
+          <Card className="shadow-lg">
+            <CardHeader>
+              <div className="flex items-center gap-2 mb-2">
+                <MessageSquare className="w-5 h-5 text-primary" />
+                <CardTitle>Employee Email Accounts</CardTitle>
+              </div>
+              <CardDescription>Create email accounts for employees</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <form onSubmit={handleCreateEmail} className="space-y-3">
+                <div>
+                  <Label htmlFor="newEmail" className="text-sm font-medium mb-2 block">
+                    Email Address
+                  </Label>
+                  <Input
+                    id="newEmail"
+                    type="email"
+                    placeholder="employee@company.com"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    required
+                    className="h-11"
+                  />
+                </div>
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? (
+                    <>
+                      <span className="animate-spin mr-2">⏳</span>
+                      Creating...
+                    </>
+                  ) : (
+                    <>
+                      <Users className="w-4 h-4 mr-2" />
+                      Create Email Account
+                    </>
+                  )}
+                </Button>
+              </form>
+
+              {employeeEmails.length > 0 && (
+                <div className="space-y-3 pt-4 border-t">
+                  <Label className="text-sm font-medium">Created Accounts ({employeeEmails.length})</Label>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {employeeEmails.map((emp) => (
+                      <div key={emp.id} className="bg-muted/50 rounded-lg p-3 space-y-2 border">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{emp.email}</p>
+                            <p className="text-xs text-muted-foreground font-mono truncate">
+                              Password: {emp.password}
+                            </p>
+                          </div>
+                          <div className="flex gap-1 shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => copyToClipboard(emp.email, `email-${emp.id}`)}
+                              title="Copy email"
+                            >
+                              {copiedId === `email-${emp.id}` ? (
+                                <Check className="w-3.5 h-3.5 text-green-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => copyToClipboard(emp.password, `pass-${emp.id}`)}
+                              title="Copy password"
+                            >
+                              {copiedId === `pass-${emp.id}` ? (
+                                <Check className="w-3.5 h-3.5 text-green-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   )

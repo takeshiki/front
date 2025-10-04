@@ -50,6 +50,13 @@ export default function EmployeeRegisterPage() {
     setLoading(true)
 
     try {
+      // Validate Company ID format (MongoDB ObjectId is 24 hex characters)
+      if (!formData.companyId || formData.companyId.length !== 24 || !/^[a-f0-9]{24}$/i.test(formData.companyId)) {
+        alert('Invalid Company ID format. Please enter a valid 24-character company ID (provided by your HR department).')
+        setLoading(false)
+        return
+      }
+
       const payload = {
         ...formData,
         tags: {
@@ -152,13 +159,16 @@ export default function EmployeeRegisterPage() {
                   <Label htmlFor="companyId" className="text-sm font-medium">Company ID</Label>
                   <Input
                     id="companyId"
-                    placeholder="Provided by your company"
+                    placeholder="24-character ID (e.g., 507f1f77bcf86cd799439011)"
                     value={formData.companyId}
-                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, companyId: e.target.value.toLowerCase().trim() })}
                     required
-                    className="h-11"
+                    className="h-11 font-mono text-sm"
+                    maxLength={24}
+                    pattern="[a-f0-9]{24}"
+                    title="Must be a 24-character hexadecimal string"
                   />
-                  <p className="text-xs text-muted-foreground">Ask your HR department for this ID</p>
+                  <p className="text-xs text-muted-foreground">Ask your HR department for this 24-character company ID</p>
                 </div>
 
                 <div className="space-y-2">
