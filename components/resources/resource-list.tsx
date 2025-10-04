@@ -17,8 +17,25 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-export function ResourceList() {
-  const { resources, deleteResource } = useResources()
+interface ResourceListProps {
+  companyId: string
+  canDelete?: boolean
+}
+
+export function ResourceList({ companyId, canDelete = true }: ResourceListProps) {
+  const { resources, isLoading, removeResource } = useResources(companyId)
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex justify-center py-8">
+            <span className="animate-spin text-4xl">⏳</span>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   if (resources.length === 0) {
     return (
@@ -35,62 +52,74 @@ export function ResourceList() {
     <Card>
       <CardHeader>
         <CardTitle>All Resources</CardTitle>
-        <CardDescription>
-          {resources.length} resource{resources.length !== 1 ? "s" : ""} in your knowledge base
-        </CardDescription>
+        <CardDescription>{resources.length} resource(s) available</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
           {resources.map((resource) => (
-            <div
-              key={resource.id}
-              className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-            >
-              <div className="flex items-center gap-3 flex-1">
-                {resource.type === "file" ? (
-                  <FileText className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <div key={resource.id} className="flex items-start justify-between gap-4 p-4 border rounded-lg hover:bg-muted/50 transition-colors">
+              <div className="flex items-start gap-3 flex-1 min-w-0">
+                {resource.type === 'file' ? (
+                  <FileText className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 ) : (
-                  <LinkIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  <LinkIcon className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                 )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium truncate">{resource.title}</p>
-                  {resource.type === "url" && resource.url && (
+                  <h3 className="font-medium truncate">{resource.title}</h3>
+                  {resource.type === 'url' && resource.url && (
                     <a
                       href={resource.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-xs text-muted-foreground hover:underline flex items-center gap-1"
+                      className="text-xs text-muted-foreground hover:underline flex items-center gap-1 mt-1"
                     >
-                      {resource.url}
-                      <ExternalLink className="w-3 h-3" />
+                      <span className="truncate">{resource.url}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
                     </a>
                   )}
-                  <p className="text-xs text-muted-foreground">
+                  {resource.type === 'file' && resource.fileUrl && (
+                    <a
+                      href={resource.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-muted-foreground hover:underline flex items-center gap-1 mt-1"
+                    >
+                      <span className="truncate">View file</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
                     Added {new Date(resource.createdAt).toLocaleDateString()}
                   </p>
                 </div>
-                <Badge variant="outline">{resource.type}</Badge>
               </div>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="flex-shrink-0">
-                    <Trash2 className="w-4 h-4 text-destructive" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Resource</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{resource.title}"? This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => deleteResource(resource.id)}>Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <div className="flex items-center gap-2 shrink-0">
+                <Badge variant="outline" className="capitalize">{resource.type}</Badge>
+                {canDelete && (
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Delete Resource</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to delete "{resource.title}"? This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => removeResource(resource.id)}>
+                          Delete
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
+              </div>
             </div>
           ))}
         </div>
