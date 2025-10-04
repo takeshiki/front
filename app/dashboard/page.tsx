@@ -21,9 +21,6 @@ interface EmployeeEmail {
 export default function DashboardPage() {
   const router = useRouter()
   const { company, isRegistered } = useCompany()
-  const [loading, setLoading] = useState(false)
-  const [newEmail, setNewEmail] = useState("")
-  const [employeeEmails, setEmployeeEmails] = useState<EmployeeEmail[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
   if (!isRegistered || !company) {
@@ -35,58 +32,6 @@ export default function DashboardPage() {
         </div>
       </div>
     )
-  }
-
-  const generatePassword = () => {
-    const length = 12
-    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*"
-    let password = ""
-    for (let i = 0; i < length; i++) {
-      password += charset.charAt(Math.floor(Math.random() * charset.length))
-    }
-    return password
-  }
-
-  const handleCreateEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!newEmail.trim()) return
-
-    setLoading(true)
-
-    try {
-      const generatedPassword = generatePassword()
-      
-      console.log('Creating email:', { companyId: company.id, email: newEmail })
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/employees/create-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          companyId: company.id,
-          email: newEmail,
-          password: generatedPassword,
-        }),
-      })
-
-      console.log('Response status:', response.status)
-
-      if (response.ok) {
-        const employeeEmail = await response.json()
-        console.log('Email created:', employeeEmail)
-        setEmployeeEmails([...employeeEmails, employeeEmail])
-        setNewEmail("")
-      } else {
-        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
-        console.error('Failed to create email:', response.status, errorData)
-        alert(`Failed to create employee email: ${errorData.message || response.statusText}`)
-      }
-    } catch (error) {
-      console.error("Error creating email:", error)
-      alert(`Failed to create employee email: ${error instanceof Error ? error.message : 'Network error'}`)
-    } finally {
-      setLoading(false)
-    }
   }
 
   const copyToClipboard = (text: string, id: string) => {
@@ -179,10 +124,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Employee Management Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {/* Company ID Card */}
-          <Card className="shadow-lg border-primary/20">
+        {/* Company ID Card */}
+        <Card className="shadow-lg border-primary/20 max-w-2xl mx-auto">
             <CardHeader>
               <div className="flex items-center gap-2 mb-2">
                 <Key className="w-5 h-5 text-primary" />
@@ -234,97 +177,6 @@ export default function DashboardPage() {
               </div>
             </CardContent>
           </Card>
-
-          {/* Corporate Credentials Card */}
-          <Card className="shadow-lg">
-            <CardHeader>
-              <div className="flex items-center gap-2 mb-2">
-                <Key className="w-5 h-5 text-primary" />
-                <CardTitle>Corporate Credentials</CardTitle>
-              </div>
-              <CardDescription>Create email credentials for corporate systems (not for OnboardAI login)</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <form onSubmit={handleCreateEmail} className="space-y-3">
-                <div>
-                  <Label htmlFor="newEmail" className="text-sm font-medium mb-2 block">
-                    Email Address
-                  </Label>
-                  <Input
-                    id="newEmail"
-                    type="email"
-                    placeholder="employee@company.com"
-                    value={newEmail}
-                    onChange={(e) => setNewEmail(e.target.value)}
-                    required
-                    className="h-11"
-                  />
-                </div>
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? (
-                    <>
-                      <span className="animate-spin mr-2">⏳</span>
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <Users className="w-4 h-4 mr-2" />
-                      Create Credentials
-                    </>
-                  )}
-                </Button>
-              </form>
-
-              {employeeEmails.length > 0 && (
-                <div className="space-y-3 pt-4 border-t">
-                  <Label className="text-sm font-medium">Created Accounts ({employeeEmails.length})</Label>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                    {employeeEmails.map((emp) => (
-                      <div key={emp.id} className="bg-muted/50 rounded-lg p-3 space-y-2 border">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{emp.email}</p>
-                            <p className="text-xs text-muted-foreground font-mono truncate">
-                              Password: {emp.password}
-                            </p>
-                          </div>
-                          <div className="flex gap-1 shrink-0">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => copyToClipboard(emp.email, `email-${emp.id}`)}
-                              title="Copy email"
-                            >
-                              {copiedId === `email-${emp.id}` ? (
-                                <Check className="w-3.5 h-3.5 text-green-600" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0"
-                              onClick={() => copyToClipboard(emp.password, `pass-${emp.id}`)}
-                              title="Copy password"
-                            >
-                              {copiedId === `pass-${emp.id}` ? (
-                                <Check className="w-3.5 h-3.5 text-green-600" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
       </main>
     </div>
   )

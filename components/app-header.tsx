@@ -63,6 +63,7 @@ export function AppHeader({ showBackButton = false, backPath, title }: AppHeader
   ] : userType === 'employee' ? [
     { label: 'Chat', path: '/chat', icon: Sparkles },
     { label: 'Resources', path: '/resources', icon: Building2 },
+    { label: 'Profile', path: '/profile', icon: UserCircle },
   ] : []
 
   return (
