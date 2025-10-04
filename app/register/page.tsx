@@ -45,7 +45,12 @@ export default function RegisterPage() {
       if (response.ok) {
         const company = await response.json()
         console.log('Registration successful:', company)
-        setCompany(company)
+        // Normalize _id to id for frontend compatibility
+        const normalizedCompany = {
+          ...company,
+          id: company._id || company.id
+        }
+        setCompany(normalizedCompany)
         router.push("/dashboard")
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
