@@ -72,12 +72,13 @@ class ApiClient {
 
   // Resource endpoints
   resources = {
-    list: (companyId: string) => this.request<Resource[]>(`/companies/${companyId}/resources`),
+    list: (companyId: string) => this.request<Resource[]>(`/resources/companies/${companyId}`),
 
-    uploadFile: async (companyId: string, file: File) => {
+    uploadFile: async (companyId: string, file: File, title?: string) => {
       const formData = new FormData()
       formData.append("file", file)
       formData.append("companyId", companyId)
+      if (title) formData.append("title", title)
 
       const response = await fetch(`${API_BASE_URL}/resources/upload`, {
         method: "POST",
@@ -91,7 +92,7 @@ class ApiClient {
       return response.json() as Promise<Resource>
     },
 
-    addUrl: (companyId: string, url: string, title?: string) =>
+    addUrl: (companyId: string, url: string, title: string) =>
       this.request<Resource>("/resources/url", {
         method: "POST",
         body: JSON.stringify({ companyId, url, title }),
@@ -105,20 +106,20 @@ class ApiClient {
 
   // Chat endpoints
   chat = {
-    listConversations: (companyId: string) => this.request<Conversation[]>(`/companies/${companyId}/conversations`),
+    listConversations: (companyId: string) => this.request<Conversation[]>(`/conversations/companies/${companyId}`),
 
-    createConversation: (companyId: string) =>
+    createConversation: (companyId: string, title: string) =>
       this.request<Conversation>("/conversations", {
         method: "POST",
-        body: JSON.stringify({ companyId }),
+        body: JSON.stringify({ companyId, title }),
       }),
 
-    getMessages: (conversationId: string) => this.request<Message[]>(`/conversations/${conversationId}/messages`),
+    getMessages: (conversationId: string) => this.request<Message[]>(`/messages/conversations/${conversationId}`),
 
-    sendMessage: (conversationId: string, content: string) =>
-      this.request<Message>(`/conversations/${conversationId}/messages`, {
+    sendMessage: (conversationId: string, content: string, role: "user" | "assistant" = "user") =>
+      this.request<Message>("/messages", {
         method: "POST",
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({ conversationId, content, role }),
       }),
   }
 }
