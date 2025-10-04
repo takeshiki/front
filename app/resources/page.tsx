@@ -1,73 +1,63 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCompany } from "@/lib/hooks/use-company"
 import { FileUpload } from "@/components/resources/file-upload"
 import { UrlUpload } from "@/components/resources/url-upload"
 import { ResourceList } from "@/components/resources/resource-list"
-import { Sparkles, ArrowLeft } from "lucide-react"
+import { AppHeader } from "@/components/app-header"
+import { isAuthenticated } from "@/lib/auth-utils"
 
 export default function ResourcesPage() {
   const router = useRouter()
   const { company, isRegistered } = useCompany()
+  const [isAuth, setIsAuth] = useState(false)
 
-  if (!isRegistered || !company) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Please log in to access resources</p>
-          <Button onClick={() => router.push("/login")}>Go to Login</Button>
-        </div>
-      </div>
-    )
+  useEffect(() => {
+    const auth = isAuthenticated()
+    setIsAuth(auth)
+    
+    if (!auth && !isRegistered) {
+      router.push("/")
+    }
+  }, [isRegistered, router])
+
+  if (!isAuth && !isRegistered) {
+    return null
   }
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              <span className="font-semibold text-xl">OnboardAI</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader showBackButton title="Resources" />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Manage Resources</h1>
-          <p className="text-muted-foreground">Upload files or add URLs to build your onboarding knowledge base.</p>
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-6xl">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Manage Resources</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Upload files or add URLs for your onboarding materials
+          </p>
         </div>
 
-        <Tabs defaultValue="upload" className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
-            <TabsTrigger value="upload">Upload Files</TabsTrigger>
-            <TabsTrigger value="urls">Add URLs</TabsTrigger>
-            <TabsTrigger value="all">All Resources</TabsTrigger>
+        <Tabs defaultValue="list" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3 max-w-md">
+            <TabsTrigger value="list" className="text-xs sm:text-sm">Browse</TabsTrigger>
+            <TabsTrigger value="upload" className="text-xs sm:text-sm">Upload File</TabsTrigger>
+            <TabsTrigger value="url" className="text-xs sm:text-sm">Add URL</TabsTrigger>
           </TabsList>
 
+          <TabsContent value="list" className="space-y-4">
+            <ResourceList companyId={company?.id || ""} />
+          </TabsContent>
+
           <TabsContent value="upload" className="space-y-4">
-            <FileUpload />
+            <FileUpload companyId={company?.id || ""} />
           </TabsContent>
 
-          <TabsContent value="urls" className="space-y-4">
-            <UrlUpload />
-          </TabsContent>
-
-          <TabsContent value="all" className="space-y-4">
-            <ResourceList />
+          <TabsContent value="url" className="space-y-4">
+            <UrlUpload companyId={company?.id || ""} />
           </TabsContent>
         </Tabs>
       </main>

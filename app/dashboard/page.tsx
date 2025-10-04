@@ -8,7 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useCompany } from "@/lib/hooks/use-company"
-import { MessageSquare, Upload, Sparkles, Building2, Edit, Copy, Check, Key, Users } from "lucide-react"
+import { MessageSquare, Upload, Building2, Edit, Copy, Check, Key, Users } from "lucide-react"
+import { AppHeader } from "@/components/app-header"
 
 interface EmployeeEmail {
   id: string
@@ -96,30 +97,32 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-primary" />
-            <span className="font-semibold text-xl">OnboardAI</span>
-          </div>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Building2 className="w-4 h-4" />
-              <span>{company.name}</span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome, {company.contactName}!</h1>
-          <p className="text-muted-foreground">Manage onboarding resources and chat with your AI assistant.</p>
+      <main className="container mx-auto px-4 py-6 sm:py-8 max-w-7xl">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Welcome, {company.contactName}!</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
+            Manage onboarding resources and chat with your AI assistant.
+          </p>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+          {/* Employees Card */}
+          <Card className="hover:shadow-lg transition-shadow">
+            <CardHeader>
+              <Users className="w-10 h-10 text-primary mb-2" />
+              <CardTitle>Employees</CardTitle>
+              <CardDescription>View and manage your company's employees and their skills.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/dashboard/employees">
+                <Button className="w-full">View Employees</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
           {/* Resources Card */}
           <Card className="hover:shadow-lg transition-shadow">
             <CardHeader>
@@ -177,7 +180,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Employee Management Section */}
-        <div className="grid lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {/* Company ID Card */}
           <Card className="shadow-lg border-primary/20">
             <CardHeader>
@@ -232,14 +235,14 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Employee Email Accounts Card */}
+          {/* Corporate Credentials Card */}
           <Card className="shadow-lg">
             <CardHeader>
               <div className="flex items-center gap-2 mb-2">
-                <MessageSquare className="w-5 h-5 text-primary" />
-                <CardTitle>Employee Email Accounts</CardTitle>
+                <Key className="w-5 h-5 text-primary" />
+                <CardTitle>Corporate Credentials</CardTitle>
               </div>
-              <CardDescription>Create email accounts for employees</CardDescription>
+              <CardDescription>Create email credentials for corporate systems (not for OnboardAI login)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <form onSubmit={handleCreateEmail} className="space-y-3">
@@ -266,7 +269,7 @@ export default function DashboardPage() {
                   ) : (
                     <>
                       <Users className="w-4 h-4 mr-2" />
-                      Create Email Account
+                      Create Credentials
                     </>
                   )}
                 </Button>
