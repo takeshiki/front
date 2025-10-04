@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { useCompany } from "@/lib/hooks/use-company"
 import { ChatInterface } from "@/components/chat/chat-interface"
@@ -9,28 +9,19 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Sparkles, Menu } from "lucide-react"
 import Link from "next/link"
-import { Spinner } from "@/components/ui/spinner"
 
 export default function ChatPage() {
   const router = useRouter()
   const { company, isRegistered } = useCompany()
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
 
-  useEffect(() => {
-    console.log("[v0] Chat page mounted")
-    console.log("[v0] isRegistered:", isRegistered)
-    console.log("[v0] company:", company)
-
-    if (!isRegistered) {
-      console.log("[v0] Not registered, redirecting to /register")
-      router.push("/register")
-    }
-  }, [isRegistered, router, company])
-
   if (!isRegistered || !company) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Spinner className="w-8 h-8" />
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Please log in to access the chat</p>
+          <Button onClick={() => router.push("/login")}>Go to Login</Button>
+        </div>
       </div>
     )
   }

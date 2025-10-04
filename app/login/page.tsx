@@ -36,21 +36,19 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json()
+        console.log("Login response:", data)
         localStorage.setItem("access_token", data.access_token)
         localStorage.setItem("user_type", "company")
 
-        // Fetch company profile
-        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI}/auth/company/profile`, {
-          headers: {
-            Authorization: `Bearer ${data.access_token}`,
-          },
-        })
-
-        if (profileResponse.ok) {
-          const companyData = await profileResponse.json()
-          setCompany(companyData)
+        // Set company data from login response
+        if (data.user) {
+          console.log("Setting company:", data.user)
+          setCompany(data.user)
+          console.log("Company set, redirecting to dashboard")
         }
 
+        // Small delay to ensure Zustand persists the state
+        await new Promise(resolve => setTimeout(resolve, 100))
         window.location.href = "/dashboard"
       } else {
         alert("Invalid credentials")
@@ -81,24 +79,18 @@ export default function LoginPage() {
 
       if (response.ok) {
         const data = await response.json()
+        console.log("User login response:", data)
         localStorage.setItem("access_token", data.access_token)
         localStorage.setItem("user_type", "user")
 
-        // Fetch user profile and their company
-        const profileResponse = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI}/auth/user/profile`, {
-          headers: {
-            Authorization: `Bearer ${data.access_token}`,
-          },
-        })
-
-        if (profileResponse.ok) {
-          const userData = await profileResponse.json()
-          // Set the user's company data to enable access
-          if (userData.company) {
-            setCompany(userData.company)
-          }
+        // Set company data from user's login response
+        if (data.user && data.user.company) {
+          console.log("Setting company from user:", data.user.company)
+          setCompany(data.user.company)
         }
 
+        // Small delay to ensure Zustand persists the state
+        await new Promise(resolve => setTimeout(resolve, 100))
         window.location.href = "/chat"
       } else {
         alert("Invalid credentials")

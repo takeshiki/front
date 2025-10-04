@@ -1,6 +1,5 @@
 "use client"
 
-import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
@@ -13,13 +12,18 @@ import { Sparkles, ArrowLeft } from "lucide-react"
 
 export default function ResourcesPage() {
   const router = useRouter()
-  const { isRegistered } = useCompany()
+  const { company, isRegistered } = useCompany()
 
-  useEffect(() => {
-    if (!isRegistered) {
-      router.push("/register")
-    }
-  }, [isRegistered, router])
+  if (!isRegistered || !company) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Please log in to access resources</p>
+          <Button onClick={() => router.push("/login")}>Go to Login</Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
