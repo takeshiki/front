@@ -1,5 +1,10 @@
 import { Suspense } from "react"
-import DashboardPageContent from "@/components/dashboard/dashboard-page-content"
+import dynamic from "next/dynamic"
+
+const DashboardPageContent = dynamic(() => import("@/components/dashboard/dashboard-page-content"), {
+  ssr: false,
+  loading: () => <div className="min-h-screen" />,
+})
 
 export default function DashboardPage() {
   return (
