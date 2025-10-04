@@ -34,35 +34,41 @@ export function useResources() {
   const uploadFile = async (file: File) => {
     if (!company) throw new Error("No company registered")
 
-    // Mock upload for testing
-    const mockResource: Resource = {
-      id: `resource-${Date.now()}`,
-      companyId: company.id,
-      type: "file",
-      title: file.name,
-      fileUrl: URL.createObjectURL(file),
-      createdAt: new Date().toISOString(),
+    const { api } = await import("../api-client")
+    const resource: any = await api.resources.uploadFile(company.id, file, file.name)
+
+    const formattedResource: Resource = {
+      id: resource._id || resource.id,
+      companyId: typeof resource.companyId === 'string' ? resource.companyId : resource.companyId.toString(),
+      type: resource.type,
+      title: resource.title,
+      fileUrl: resource.fileUrl,
+      tags: resource.tags || [],
+      createdAt: typeof resource.createdAt === 'string' ? resource.createdAt : resource.createdAt.toString(),
     }
 
-    addResource(mockResource)
-    return mockResource
+    addResource(formattedResource)
+    return formattedResource
   }
 
   const addUrl = async (url: string, title?: string) => {
     if (!company) throw new Error("No company registered")
 
-    // Mock add URL for testing
-    const mockResource: Resource = {
-      id: `resource-${Date.now()}`,
-      companyId: company.id,
-      type: "url",
-      title: title || new URL(url).hostname,
-      url,
-      createdAt: new Date().toISOString(),
+    const { api } = await import("../api-client")
+    const resource: any = await api.resources.addUrl(company.id, url, title || new URL(url).hostname)
+
+    const formattedResource: Resource = {
+      id: resource._id || resource.id,
+      companyId: typeof resource.companyId === 'string' ? resource.companyId : resource.companyId.toString(),
+      type: resource.type,
+      title: resource.title,
+      url: resource.url,
+      tags: resource.tags || [],
+      createdAt: typeof resource.createdAt === 'string' ? resource.createdAt : resource.createdAt.toString(),
     }
 
-    addResource(mockResource)
-    return mockResource
+    addResource(formattedResource)
+    return formattedResource
   }
 
   const deleteResource = async (id: string) => {

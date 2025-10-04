@@ -18,6 +18,7 @@ export interface Resource {
   title: string
   url?: string
   fileUrl?: string
+  tags: string[]
   createdAt: string
 }
 

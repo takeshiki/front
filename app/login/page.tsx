@@ -43,7 +43,11 @@ export default function LoginPage() {
         // Set company data from login response
         if (data.user) {
           console.log("Setting company:", data.user)
-          setCompany(data.user)
+          const formattedCompany = {
+            ...data.user,
+            id: data.user._id,
+          }
+          setCompany(formattedCompany)
           console.log("Company set, redirecting to dashboard")
         }
 
@@ -86,7 +90,11 @@ export default function LoginPage() {
         // Set company data from user's login response
         if (data.user && data.user.company) {
           console.log("Setting company from user:", data.user.company)
-          setCompany(data.user.company)
+          const formattedCompany = {
+            ...data.user.company,
+            id: data.user.company._id,
+          }
+          setCompany(formattedCompany)
         }
 
         // Small delay to ensure Zustand persists the state

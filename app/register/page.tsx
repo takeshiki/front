@@ -41,7 +41,12 @@ export default function RegisterPage() {
 
       if (response.ok) {
         const company = await response.json()
-        setCompany(company)
+        // Convert MongoDB _id to id for frontend
+        const formattedCompany = {
+          ...company,
+          id: company._id,
+        }
+        setCompany(formattedCompany)
 
         // Auto-login after registration
         const loginResponse = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI}/auth/company/login`, {
