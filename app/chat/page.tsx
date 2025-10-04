@@ -66,7 +66,7 @@ export default function ChatPage() {
 
         {/* Chat Area */}
         <main className="flex-1 overflow-hidden">
-          <ChatInterface conversationId={selectedConversationId} />
+          <ChatInterface conversationId={selectedConversationId} onConversationCreate={setSelectedConversationId} />
         </main>
       </div>
     </div>

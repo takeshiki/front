@@ -48,6 +48,19 @@ export function useResources() {
     }
 
     addResource(formattedResource)
+
+    // Process the file for RAG (create embeddings)
+    try {
+      const resourceId = resource._id || resource.id
+      await fetch(`http://localhost:8000/api/ai/process-file/${resourceId}`, {
+        method: 'POST',
+      })
+      console.log(`File processed for RAG: ${resourceId}`)
+    } catch (error) {
+      console.error('Error processing file for RAG:', error)
+      // Don't fail the upload if processing fails
+    }
+
     return formattedResource
   }
 
@@ -68,6 +81,19 @@ export function useResources() {
     }
 
     addResource(formattedResource)
+
+    // Process the URL for RAG (create embeddings)
+    try {
+      const resourceId = resource._id || resource.id
+      await fetch(`http://localhost:8000/api/ai/process-url/${resourceId}`, {
+        method: 'POST',
+      })
+      console.log(`URL processed for RAG: ${resourceId}`)
+    } catch (error) {
+      console.error('Error processing URL for RAG:', error)
+      // Don't fail the upload if processing fails
+    }
+
     return formattedResource
   }
 

@@ -56,7 +56,7 @@ const useChatStore = create<ChatStore>()(
   ),
 )
 
-export function useChat(conversationId: string | null) {
+export function useChat(conversationId: string | null, onConversationCreate?: (id: string) => void) {
   const { company } = useCompany()
   const { conversations, addConversation, addMessage, updateConversationTitle } = useChatStore()
 
@@ -80,43 +80,73 @@ export function useChat(conversationId: string | null) {
 
   const sendMessage = async (content: string) => {
     if (!company) throw new Error("No company registered")
-    if (!conversationId) throw new Error("No conversation selected")
+
+    // Auto-create conversation if none exists
+    let activeConversationId = conversationId
+    if (!activeConversationId) {
+      activeConversationId = createConversation()
+      onConversationCreate?.(activeConversationId)
+    }
 
     // Add user message
     const userMessage: Message = {
       id: `msg-${Date.now()}`,
-      conversationId,
+      conversationId: activeConversationId,
       role: "user",
       content,
       createdAt: new Date().toISOString(),
     }
-    addMessage(conversationId, userMessage)
+    addMessage(activeConversationId, userMessage)
 
     // Update conversation title if it's the first message
     if (messages.length === 0) {
       const title = content.slice(0, 50) + (content.length > 50 ? "..." : "")
-      updateConversationTitle(conversationId, title)
+      updateConversationTitle(activeConversationId, title)
     }
 
-    // Mock AI response for testing
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-
-    const aiMessage: Message = {
-      id: `msg-${Date.now() + 1}`,
-      conversationId,
-      role: "assistant",
-      content: `This is a mock response to: "${content}". In production, this would be an AI-generated answer based on your uploaded resources.`,
-      sources: [
-        {
-          type: "url",
-          title: "Employee Handbook",
-          url: "https://example.com/handbook",
-          excerpt: "This is an example excerpt from the source document...",
+    try {
+      // Call RAG API
+      const response = await fetch("http://localhost:8000/api/ai/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      ],
-      createdAt: new Date().toISOString(),
+        body: JSON.stringify({
+          query: content,
+          companyId: company.id,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`API error: ${response.statusText}`)
+      }
+
+      const data = await response.json()
+
+      const aiMessage: Message = {
+        id: `msg-${Date.now() + 1}`,
+        conversationId: activeConversationId,
+        role: "assistant",
+        content: data.content,
+        sources: data.sources?.map((source: any) => ({
+          type: "file" as const,
+          title: "Company Document",
+          excerpt: source.text,
+        })),
+        createdAt: new Date().toISOString(),
+      }
+      addMessage(activeConversationId, aiMessage)
+    } catch (error) {
+      console.error("Error sending message:", error)
+      const errorMessage: Message = {
+        id: `msg-${Date.now() + 1}`,
+        conversationId: activeConversationId,
+        role: "assistant",
+        content: "Sorry, I encountered an error processing your request. Please try again.",
+        createdAt: new Date().toISOString(),
+      }
+      addMessage(activeConversationId, errorMessage)
     }
-    addMessage(conversationId, aiMessage)
   }
 
   return {
