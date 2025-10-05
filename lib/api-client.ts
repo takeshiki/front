@@ -123,6 +123,21 @@ class ApiClient {
         method: "POST",
         body: JSON.stringify({ conversationId, content, role }),
       }),
+
+    generateWelcome: (data: {
+      companyId: string
+      employeeName?: string
+      department?: string
+      tags?: {
+        roles?: string[]
+        skills?: string[]
+        interests?: string[]
+      }
+    }) =>
+      this.request<{ content: string; sources: any[] }>("/ai/welcome", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
   }
 }
 
