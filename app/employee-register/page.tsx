@@ -67,7 +67,7 @@ export default function EmployeeRegisterPage() {
       }
       
       console.log('Sending employee registration:', payload)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/employees`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/employees`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

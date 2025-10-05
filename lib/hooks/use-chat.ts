@@ -168,7 +168,7 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
       setMessages(prev => [...prev, userMessage])
 
       // Call RAG API
-      const response = await fetch("http://localhost:8000/api/ai/chat", {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/ai/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

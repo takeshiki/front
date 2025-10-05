@@ -52,7 +52,7 @@ export default function SettingsPage() {
 
     try {
       console.log('Updating company:', formData)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/companies/${company.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/companies/${company.id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
