@@ -10,12 +10,14 @@ function getCompanyId(): string | null {
   console.log('[useChat] User type:', userType)
   
   if (userType === 'company') {
-    const companyData = localStorage.getItem('company')
+    const companyData = localStorage.getItem('company-storage')
     if (companyData) {
       try {
-        const company = JSON.parse(companyData)
-        console.log('[useChat] Company data:', { id: company.id, _id: company._id })
-        return company.id || company._id
+        const parsed = JSON.parse(companyData)
+        // zustand persist wraps the data in state object
+        const company = parsed.state?.company || parsed.company
+        console.log('[useChat] Company data:', { id: company?.id, _id: company?._id })
+        return company?.id || company?._id || null
       } catch (e) {
         console.error('[useChat] Error parsing company data:', e)
         return null
@@ -34,6 +36,13 @@ function getCompanyId(): string | null {
         return null
       }
     }
+  }
+  
+  // For testing: use test companyId from localStorage or environment
+  const testCompanyId = localStorage.getItem('test_company_id') || process.env.NEXT_PUBLIC_TEST_COMPANY_ID
+  if (testCompanyId) {
+    console.log('[useChat] Using test company ID:', testCompanyId)
+    return testCompanyId
   }
   
   console.log('[useChat] No company ID found')
@@ -128,7 +137,10 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
 
   const createConversation = async () => {
     const companyId = getCompanyId()
-    if (!companyId) throw new Error("No company registered")
+    if (!companyId) {
+      console.warn("[useChat] No company ID found. Set test_company_id in localStorage or login.")
+      throw new Error("No company ID found. Please login or set test_company_id in localStorage for testing.")
+    }
 
     try {
       const { api } = await import("../api-client")
@@ -149,7 +161,10 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
 
   const sendMessage = async (content: string) => {
     const companyId = getCompanyId()
-    if (!companyId) throw new Error("No company registered")
+    if (!companyId) {
+      console.warn("[useChat] No company ID found. Set test_company_id in localStorage or login.")
+      throw new Error("No company ID found. Please login or set test_company_id in localStorage for testing.")
+    }
 
     // Auto-create conversation if none exists
     let activeConversationId = conversationId

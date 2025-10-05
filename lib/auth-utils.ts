@@ -24,7 +24,12 @@ export function getHomePath(): string {
 
 export function isAuthenticated(): boolean {
   if (typeof window === 'undefined') return false
-  return !!localStorage.getItem('access_token') || !!localStorage.getItem('company')
+  
+  // Check for employee token or company data
+  const hasEmployeeToken = !!localStorage.getItem('access_token')
+  const hasCompanyData = !!localStorage.getItem('company-storage')
+  
+  return hasEmployeeToken || hasCompanyData
 }
 
 export function logout() {
@@ -32,6 +37,7 @@ export function logout() {
   localStorage.removeItem('access_token')
   localStorage.removeItem('user_type')
   localStorage.removeItem('employee')
-  localStorage.removeItem('company-storage')
+  localStorage.removeItem('company-storage') // zustand persist storage
+  localStorage.removeItem('company') // legacy key (if exists)
 }
 

@@ -15,42 +15,51 @@ export default function ChatPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<
     string | null
   >(null);
-  const [isAuth, setIsAuth] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // Temporarily disabled auth check for testing
+  // const [isAuth, setIsAuth] = useState(false);
+  // const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const auth = isAuthenticated();
     const userType = getUserType();
-    setIsAuth(auth);
-    setIsLoading(false);
-
-    console.log('[ChatPage] Auth check:', { auth, userType });
+    // setIsAuth(auth);
+    // setIsLoading(false);
     
     // Debug: Check localStorage data
-    if (auth && userType === 'employee') {
+    if (userType === 'employee') {
       const employeeData = localStorage.getItem('employee');
       console.log('[ChatPage] Employee data:', employeeData ? JSON.parse(employeeData) : null);
-    } else if (auth && userType === 'company') {
-      const companyData = localStorage.getItem('company');
-      console.log('[ChatPage] Company data:', companyData ? JSON.parse(companyData) : null);
+    } else if (userType === 'company') {
+      const companyData = localStorage.getItem('company-storage');
+      if (companyData) {
+        try {
+          const parsed = JSON.parse(companyData);
+          const company = parsed.state?.company || parsed.company;
+          console.log('[ChatPage] Company data:', company);
+        } catch (e) {
+          console.error('[ChatPage] Error parsing company data:', e);
+        }
+      }
     }
 
-    if (!auth) {
-      router.push("/");
-    }
+    // Auth check disabled for testing
+    // if (!auth) {
+    //   router.push("/");
+    // }
   }, [router]);
 
-  if (isLoading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        <span className="animate-spin text-4xl">⏳</span>
-      </div>
-    );
-  }
+  // Loading and auth check disabled for testing
+  // if (isLoading) {
+  //   return (
+  //     <div className="h-screen flex items-center justify-center">
+  //       <span className="animate-spin text-4xl">⏳</span>
+  //     </div>
+  //   );
+  // }
 
-  if (!isAuth) {
-    return null;
-  }
+  // if (!isAuth) {
+  //   return null;
+  // }
 
   return (
     <div className="h-screen flex flex-col bg-background">
@@ -86,7 +95,7 @@ export default function ChatPage() {
         <main className="flex-1 overflow-hidden">
           <ChatInterface
             conversationId={selectedConversationId}
-            onConversationCreated={setSelectedConversationId}
+            onConversationCreate={setSelectedConversationId}
           />
         </main>
       </div>
