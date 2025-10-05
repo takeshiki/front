@@ -77,13 +77,14 @@ export default function EmployeeRegisterPage() {
 
       console.log('Response status:', response.status)
 
-      if (response.ok) {
-        const employee = await response.json()
-        console.log('Employee registered:', employee)
-        localStorage.setItem("access_token", employee.access_token)
-        localStorage.setItem("user_type", "employee")
-        router.push("/chat")
-      } else {
+        if (response.ok) {
+          const employee = await response.json()
+          console.log('Employee registered:', employee)
+          localStorage.setItem("access_token", employee.access_token)
+          localStorage.setItem("user_type", "employee")
+          localStorage.setItem("employee", JSON.stringify(employee)) // Store employee data
+          router.push("/chat")
+        } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
         console.error('Registration failed:', response.status, errorData)
         alert(`Registration failed: ${errorData.message || response.statusText}`)

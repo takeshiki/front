@@ -8,7 +8,7 @@ import { AppHeader } from "@/components/app-header";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
-import { isAuthenticated } from "@/lib/auth-utils";
+import { isAuthenticated, getUserType } from "@/lib/auth-utils";
 
 export default function ChatPage() {
   const router = useRouter();
@@ -20,8 +20,20 @@ export default function ChatPage() {
 
   useEffect(() => {
     const auth = isAuthenticated();
+    const userType = getUserType();
     setIsAuth(auth);
     setIsLoading(false);
+
+    console.log('[ChatPage] Auth check:', { auth, userType });
+    
+    // Debug: Check localStorage data
+    if (auth && userType === 'employee') {
+      const employeeData = localStorage.getItem('employee');
+      console.log('[ChatPage] Employee data:', employeeData ? JSON.parse(employeeData) : null);
+    } else if (auth && userType === 'company') {
+      const companyData = localStorage.getItem('company');
+      console.log('[ChatPage] Company data:', companyData ? JSON.parse(companyData) : null);
+    }
 
     if (!auth) {
       router.push("/");
