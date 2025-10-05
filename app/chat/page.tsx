@@ -1,83 +1,83 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useCompany } from "@/lib/hooks/use-company"
-import { ChatInterface } from "@/components/chat/chat-interface"
-import { ConversationSidebar } from "@/components/chat/conversation-sidebar"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Sparkles, Menu } from "lucide-react"
-import Link from "next/link"
-import { Spinner } from "@/components/ui/spinner"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ChatInterface } from "@/components/chat/chat-interface";
+import { ConversationSidebar } from "@/components/chat/conversation-sidebar";
+import { AppHeader } from "@/components/app-header";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Menu } from "lucide-react";
+import { isAuthenticated } from "@/lib/auth-utils";
 
 export default function ChatPage() {
-  const router = useRouter()
-  const { company, isRegistered } = useCompany()
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null)
+  const router = useRouter();
+  const [selectedConversationId, setSelectedConversationId] = useState<
+    string | null
+  >(null);
+  const [isAuth, setIsAuth] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.log("[v0] Chat page mounted")
-    console.log("[v0] isRegistered:", isRegistered)
-    console.log("[v0] company:", company)
+    const auth = isAuthenticated();
+    setIsAuth(auth);
+    setIsLoading(false);
 
-    if (!isRegistered) {
-      console.log("[v0] Not registered, redirecting to /register")
-      router.push("/register")
+    if (!auth) {
+      router.push("/");
     }
-  }, [isRegistered, router, company])
+  }, [router]);
 
-  if (!isRegistered || !company) {
+  if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Spinner className="w-8 h-8" />
+      <div className="h-screen flex items-center justify-center">
+        <span className="animate-spin text-4xl">⏳</span>
       </div>
-    )
+    );
+  }
+
+  if (!isAuth) {
+    return null;
   }
 
   return (
     <div className="h-screen flex flex-col bg-background">
-      {/* Header */}
-      <header className="border-b bg-background z-10">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-80 p-0">
-                <ConversationSidebar
-                  selectedConversationId={selectedConversationId}
-                  onSelectConversation={setSelectedConversationId}
-                />
-              </SheetContent>
-            </Sheet>
+      <AppHeader />
 
-            <Link href="/dashboard" className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              <span className="font-semibold text-xl">OnboardAI</span>
-            </Link>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:block w-80 border-r bg-muted/10">
+        <aside className="hidden md:block w-80 border-r overflow-y-auto">
           <ConversationSidebar
             selectedConversationId={selectedConversationId}
             onSelectConversation={setSelectedConversationId}
           />
         </aside>
 
-        {/* Chat Area */}
+        {/* Mobile Sidebar */}
+        <div className="md:hidden fixed bottom-4 left-4 z-40">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="icon" className="h-12 w-12 rounded-full shadow-lg">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-80 p-0">
+              <ConversationSidebar
+                selectedConversationId={selectedConversationId}
+                onSelectConversation={setSelectedConversationId}
+              />
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Main Chat */}
         <main className="flex-1 overflow-hidden">
-          <ChatInterface conversationId={selectedConversationId} />
+          <ChatInterface
+            conversationId={selectedConversationId}
+            onConversationCreated={setSelectedConversationId}
+          />
         </main>
       </div>
     </div>
-  )
+  );
 }

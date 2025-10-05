@@ -1,21 +1,19 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useCompany } from "@/lib/hooks/use-company"
-import { Sparkles } from "lucide-react"
-import Link from "next/link"
+import { Sparkles, ArrowLeft } from "lucide-react"
 
-export default function RegisterPage() {
+export default function SettingsPage() {
   const router = useRouter()
-  const { setCompany } = useCompany()
+  const { company, isRegistered, setCompany } = useCompany()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
@@ -23,17 +21,39 @@ export default function RegisterPage() {
     size: "",
     contactName: "",
     email: "",
-    password: "",
   })
+
+  useEffect(() => {
+    if (company) {
+      setFormData({
+        name: company.name,
+        industry: company.industry,
+        size: company.size,
+        contactName: company.contactName,
+        email: company.email,
+      })
+    }
+  }, [company])
+
+  if (!isRegistered || !company) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Please log in to access settings</p>
+          <Button onClick={() => router.push("/register")}>Go to Registration</Button>
+        </div>
+      </div>
+    )
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      console.log('Sending registration request:', formData)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/companies`, {
-        method: "POST",
+      console.log('Updating company:', formData)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/companies/${company.id}`, {
+        method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
@@ -43,41 +63,51 @@ export default function RegisterPage() {
       console.log('Response status:', response.status)
 
       if (response.ok) {
-        const company = await response.json()
-        console.log('Registration successful:', company)
-        // Normalize _id to id for frontend compatibility
-        const normalizedCompany = {
-          ...company,
-          id: company._id || company.id
-        }
-        setCompany(normalizedCompany)
+        const updatedCompany = await response.json()
+        console.log('Company updated:', updatedCompany)
+        setCompany(updatedCompany)
         router.push("/dashboard")
       } else {
         const errorData = await response.json().catch(() => ({ message: 'Unknown error' }))
-        console.error('Registration failed:', response.status, errorData)
-        alert(`Registration failed: ${errorData.message || response.statusText}`)
+        console.error('Update failed:', response.status, errorData)
+        alert(`Update failed: ${errorData.message || response.statusText}`)
       }
     } catch (error) {
-      console.error("Registration error:", error)
-      alert(`Registration failed: ${error instanceof Error ? error.message : 'Network error'}`)
+      console.error("Update error:", error)
+      alert(`Update failed: ${error instanceof Error ? error.message : 'Network error'}`)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
-        {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 justify-center mb-6">
-          <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
-          <span className="font-semibold text-lg sm:text-xl">OnboardAI</span>
-        </Link>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Header */}
+      <header className="border-b bg-background/95 backdrop-blur">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-4">
+          <Link href="/dashboard">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
+            <span className="font-semibold text-lg sm:text-xl">OnboardAI</span>
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 sm:px-6 py-8 max-w-3xl">
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold mb-2">Company Settings</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Update your company information</p>
+        </div>
 
         <Card className="border-2 shadow-lg">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-xl sm:text-2xl">Company Registration</CardTitle>
-            <CardDescription className="text-sm">Create your account in 2 minutes</CardDescription>
+          <CardHeader>
+            <CardTitle className="text-lg sm:text-xl">Company Information</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -101,7 +131,7 @@ export default function RegisterPage() {
                   required
                 >
                   <SelectTrigger id="industry" className="h-11 w-full">
-                    <SelectValue placeholder="Select your industry" />
+                    <SelectValue placeholder="Select industry" />
                   </SelectTrigger>
                   <SelectContent className="w-full">
                     <SelectItem value="technology" className="py-3">Technology & Software</SelectItem>
@@ -122,7 +152,7 @@ export default function RegisterPage() {
                   required
                 >
                   <SelectTrigger id="size" className="h-11 w-full">
-                    <SelectValue placeholder="Select company size" />
+                    <SelectValue placeholder="Select size" />
                   </SelectTrigger>
                   <SelectContent className="w-full">
                     <SelectItem value="1-10" className="py-3">1-10 employees</SelectItem>
@@ -135,7 +165,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="contactName" className="text-sm font-medium">Your Full Name</Label>
+                <Label htmlFor="contactName" className="text-sm font-medium">Contact Name</Label>
                 <Input
                   id="contactName"
                   placeholder="e.g., John Doe"
@@ -159,34 +189,24 @@ export default function RegisterPage() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Minimum 6 characters"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  minLength={6}
-                  required
-                  className="h-11"
-                />
+              <div className="flex flex-col sm:flex-row gap-2 pt-2">
+                <Button type="submit" className="flex-1 h-11" disabled={loading}>
+                  {loading ? "Saving..." : "Save Changes"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="flex-1 h-11"
+                  onClick={() => router.push("/dashboard")}
+                >
+                  Cancel
+                </Button>
               </div>
-
-              <Button type="submit" className="w-full h-11 mt-2" disabled={loading}>
-                {loading ? "Creating Account..." : "Create Account"}
-              </Button>
-
-              <p className="text-center text-xs text-muted-foreground pt-2">
-                Are you an employee?{" "}
-                <Link href="/employee-register" className="text-primary hover:underline font-medium">
-                  Sign up here
-                </Link>
-              </p>
             </form>
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   )
 }
+

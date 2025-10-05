@@ -12,12 +12,13 @@ import { Spinner } from "@/components/ui/spinner"
 
 interface ChatInterfaceProps {
   conversationId: string | null
+  onConversationCreate?: (id: string) => void
 }
 
-export function ChatInterface({ conversationId }: ChatInterfaceProps) {
+export function ChatInterface({ conversationId, onConversationCreate }: ChatInterfaceProps) {
   const [input, setInput] = useState("")
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const { messages, isLoading, sendMessage } = useChat(conversationId)
+  const { messages, isLoading, sendMessage } = useChat(conversationId, onConversationCreate)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
