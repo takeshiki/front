@@ -44,7 +44,7 @@ export default function EmployeesListPage() {
     try {
       console.log('Fetching employees for company:', company?.id)
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/employees/company/${company?.id}`,
+        `${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/employees/company/${company?.id}`,
         {
           headers: {
             "Content-Type": "application/json",

@@ -25,7 +25,7 @@ export default function CompanyLoginPage() {
 
     try {
       console.log('Company login attempt:', { email: formData.email })
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/companies/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/companies/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

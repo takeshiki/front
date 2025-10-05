@@ -93,7 +93,7 @@ export default function ProfilePage() {
 
       console.log('Updating employee:', employee.id, updateData)
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/employees/${employee.id}`,
+        `${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/employees/${employee.id}`,
         {
           method: 'PATCH',
           headers: {
