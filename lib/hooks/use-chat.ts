@@ -79,6 +79,7 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [welcomeGenerated, setWelcomeGenerated] = useState(false)
 
   // Fetch conversations when company changes
   useEffect(() => {
@@ -134,6 +135,85 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
 
     fetchMessages()
   }, [conversationId])
+
+  // Generate welcome message for new employees
+  useEffect(() => {
+    const generateWelcomeMessage = async () => {
+      // Only for employees without conversation and haven't generated welcome yet
+      const userType = getUserType()
+      if (userType !== 'employee' || conversationId || welcomeGenerated || conversations.length > 0) {
+        return
+      }
+
+      const companyId = getCompanyId()
+      if (!companyId) return
+
+      try {
+        // Get employee data
+        const employeeData = localStorage.getItem('employee')
+        if (!employeeData) return
+
+        const employee = JSON.parse(employeeData)
+        
+        setWelcomeGenerated(true)
+        setIsLoading(true)
+
+        // Create a new conversation
+        const { api } = await import("../api-client")
+        const newConversationId = await createConversation()
+        onConversationCreate?.(newConversationId)
+
+        // Generate personalized welcome message
+        const welcomeResponse = await api.chat.generateWelcome({
+          companyId,
+          employeeName: employee.name,
+          department: employee.department,
+          tags: employee.tags,
+        })
+
+        // Save welcome message to backend
+        const welcomeMessage = await api.chat.sendMessage(
+          newConversationId,
+          welcomeResponse.content,
+          "assistant"
+        )
+
+        // Add sources if available
+        const welcomeMessageWithSources: Message = {
+          ...welcomeMessage,
+          sources: welcomeResponse.sources?.map((source: any) => ({
+            type: source.resource?.type || "file",
+            title: source.resource?.title || "Company Document",
+            excerpt: source.text,
+            resourceId: source.resourceId,
+            fileName: source.resource?.fileName,
+            fileUrl: source.resource?.fileUrl,
+            url: source.resource?.url,
+          })),
+        }
+
+        setMessages([welcomeMessageWithSources])
+
+        // Update conversation title
+        setConversations(prev =>
+          prev.map(conv =>
+            conv.id === newConversationId
+              ? { ...conv, title: "Welcome to OnboardAI" }
+              : conv
+          )
+        )
+
+        console.log('✅ Welcome message generated successfully')
+      } catch (error) {
+        console.error('Error generating welcome message:', error)
+        setWelcomeGenerated(false) // Allow retry
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    generateWelcomeMessage()
+  }, [conversationId, conversations.length, welcomeGenerated, onConversationCreate])
 
   const createConversation = async () => {
     const companyId = getCompanyId()
