@@ -1,5 +1,4 @@
-import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { useState, useEffect } from "react"
 import { useCompany } from "./use-company"
 
 export interface Message {
@@ -12,6 +11,9 @@ export interface Message {
     title: string
     url?: string
     excerpt?: string
+    resourceId?: string
+    fileName?: string
+    fileUrl?: string
   }>
   createdAt: string
 }
@@ -24,58 +26,84 @@ export interface Conversation {
   createdAt: string
 }
 
-interface ChatStore {
-  conversations: Conversation[]
-  addConversation: (conversation: Conversation) => void
-  addMessage: (conversationId: string, message: Message) => void
-  updateConversationTitle: (conversationId: string, title: string) => void
-}
-
-const useChatStore = create<ChatStore>()(
-  persist(
-    (set) => ({
-      conversations: [],
-      addConversation: (conversation) =>
-        set((state) => ({
-          conversations: [...state.conversations, conversation],
-        })),
-      addMessage: (conversationId, message) =>
-        set((state) => ({
-          conversations: state.conversations.map((conv) =>
-            conv.id === conversationId ? { ...conv, messages: [...conv.messages, message] } : conv,
-          ),
-        })),
-      updateConversationTitle: (conversationId, title) =>
-        set((state) => ({
-          conversations: state.conversations.map((conv) => (conv.id === conversationId ? { ...conv, title } : conv)),
-        })),
-    }),
-    {
-      name: "chat-storage",
-    },
-  ),
-)
-
 export function useChat(conversationId: string | null, onConversationCreate?: (id: string) => void) {
   const { company } = useCompany()
-  const { conversations, addConversation, addMessage, updateConversationTitle } = useChatStore()
+  const [conversations, setConversations] = useState<Conversation[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  const currentConversation = conversationId ? conversations.find((c) => c.id === conversationId) : null
+  // Fetch conversations when company changes
+  useEffect(() => {
+    const fetchConversations = async () => {
+      if (!company?.id) {
+        setConversations([])
+        return
+      }
 
-  const messages = currentConversation?.messages || []
+      try {
+        const { api } = await import("../api-client")
+        const fetchedConversations = await api.chat.listConversations(company.id)
 
-  const createConversation = () => {
-    if (!company) throw new Error("No company registered")
+        // Convert to local format with messages array
+        const conversationsWithMessages = await Promise.all(
+          fetchedConversations.map(async (conv) => {
+            const msgs = await api.chat.getMessages(conv.id)
+            return {
+              ...conv,
+              messages: msgs,
+            }
+          })
+        )
 
-    const newConversation: Conversation = {
-      id: `conv-${Date.now()}`,
-      companyId: company.id,
-      messages: [],
-      createdAt: new Date().toISOString(),
+        setConversations(conversationsWithMessages)
+      } catch (error) {
+        console.error('Error fetching conversations:', error)
+        setConversations([])
+      }
     }
 
-    addConversation(newConversation)
-    return newConversation.id
+    fetchConversations()
+  }, [company?.id])
+
+  // Fetch messages when conversation changes
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!conversationId) {
+        setMessages([])
+        return
+      }
+
+      try {
+        const { api } = await import("../api-client")
+        const fetchedMessages = await api.chat.getMessages(conversationId)
+        setMessages(fetchedMessages)
+      } catch (error) {
+        console.error('Error fetching messages:', error)
+        setMessages([])
+      }
+    }
+
+    fetchMessages()
+  }, [conversationId])
+
+  const createConversation = async () => {
+    if (!company) throw new Error("No company registered")
+
+    try {
+      const { api } = await import("../api-client")
+      const newConversation = await api.chat.createConversation(company.id, "New Conversation")
+
+      const conversationWithMessages: Conversation = {
+        ...newConversation,
+        messages: [],
+      }
+
+      setConversations(prev => [...prev, conversationWithMessages])
+      return newConversation.id
+    } catch (error) {
+      console.error('Error creating conversation:', error)
+      throw error
+    }
   }
 
   const sendMessage = async (content: string) => {
@@ -84,27 +112,19 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
     // Auto-create conversation if none exists
     let activeConversationId = conversationId
     if (!activeConversationId) {
-      activeConversationId = createConversation()
+      activeConversationId = await createConversation()
       onConversationCreate?.(activeConversationId)
     }
 
-    // Add user message
-    const userMessage: Message = {
-      id: `msg-${Date.now()}`,
-      conversationId: activeConversationId,
-      role: "user",
-      content,
-      createdAt: new Date().toISOString(),
-    }
-    addMessage(activeConversationId, userMessage)
-
-    // Update conversation title if it's the first message
-    if (messages.length === 0) {
-      const title = content.slice(0, 50) + (content.length > 50 ? "..." : "")
-      updateConversationTitle(activeConversationId, title)
-    }
+    setIsLoading(true)
 
     try {
+      const { api } = await import("../api-client")
+
+      // Save user message to backend
+      const userMessage = await api.chat.sendMessage(activeConversationId, content, "user")
+      setMessages(prev => [...prev, userMessage])
+
       // Call RAG API
       const response = await fetch("http://localhost:8000/api/ai/chat", {
         method: "POST",
@@ -123,21 +143,41 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
 
       const data = await response.json()
 
-      const aiMessage: Message = {
-        id: `msg-${Date.now() + 1}`,
-        conversationId: activeConversationId,
-        role: "assistant",
-        content: data.content,
+      // Save AI response to backend
+      const aiMessageContent = data.content || data.answer || "I'm sorry, I couldn't generate a response."
+      const aiMessage = await api.chat.sendMessage(activeConversationId, aiMessageContent, "assistant")
+
+      // Add sources if available
+      const aiMessageWithSources: Message = {
+        ...aiMessage,
         sources: data.sources?.map((source: any) => ({
-          type: "file" as const,
-          title: "Company Document",
+          type: source.resource?.type || "file",
+          title: source.resource?.title || "Company Document",
           excerpt: source.text,
+          resourceId: source.resourceId,
+          fileName: source.resource?.fileName,
+          fileUrl: source.resource?.fileUrl,
+          url: source.resource?.url,
         })),
-        createdAt: new Date().toISOString(),
       }
-      addMessage(activeConversationId, aiMessage)
+
+      setMessages(prev => [...prev, aiMessageWithSources])
+
+      // Update conversation title if it's the first message
+      if (messages.length === 0) {
+        const title = content.slice(0, 50) + (content.length > 50 ? "..." : "")
+        setConversations(prev =>
+          prev.map(conv =>
+            conv.id === activeConversationId
+              ? { ...conv, title }
+              : conv
+          )
+        )
+      }
     } catch (error) {
       console.error("Error sending message:", error)
+
+      // Add error message locally only (don't save to backend)
       const errorMessage: Message = {
         id: `msg-${Date.now() + 1}`,
         conversationId: activeConversationId,
@@ -145,14 +185,16 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
         content: "Sorry, I encountered an error processing your request. Please try again.",
         createdAt: new Date().toISOString(),
       }
-      addMessage(activeConversationId, errorMessage)
+      setMessages(prev => [...prev, errorMessage])
+    } finally {
+      setIsLoading(false)
     }
   }
 
   return {
     conversations,
     messages,
-    isLoading: false,
+    isLoading,
     createConversation,
     sendMessage,
   }

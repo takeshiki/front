@@ -13,9 +13,13 @@ interface ConversationSidebarProps {
 export function ConversationSidebar({ selectedConversationId, onSelectConversation }: ConversationSidebarProps) {
   const { conversations, createConversation } = useChat(selectedConversationId)
 
-  const handleNewChat = () => {
-    const newId = createConversation()
-    onSelectConversation(newId)
+  const handleNewChat = async () => {
+    try {
+      const newId = await createConversation()
+      onSelectConversation(newId)
+    } catch (error) {
+      console.error('Error creating conversation:', error)
+    }
   }
 
   return (
