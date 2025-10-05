@@ -1,5 +1,44 @@
 import { useState, useEffect } from "react"
 import { useCompany } from "./use-company"
+import { getUserType } from "../auth-utils"
+
+// Get companyId from either company or employee
+function getCompanyId(): string | null {
+  if (typeof window === 'undefined') return null
+  
+  const userType = getUserType()
+  console.log('[useChat] User type:', userType)
+  
+  if (userType === 'company') {
+    const companyData = localStorage.getItem('company')
+    if (companyData) {
+      try {
+        const company = JSON.parse(companyData)
+        console.log('[useChat] Company data:', { id: company.id, _id: company._id })
+        return company.id || company._id
+      } catch (e) {
+        console.error('[useChat] Error parsing company data:', e)
+        return null
+      }
+    }
+  } else if (userType === 'employee') {
+    const employeeData = localStorage.getItem('employee')
+    console.log('[useChat] Employee data exists:', !!employeeData)
+    if (employeeData) {
+      try {
+        const employee = JSON.parse(employeeData)
+        console.log('[useChat] Employee companyId:', employee.companyId)
+        return employee.companyId
+      } catch (e) {
+        console.error('[useChat] Error parsing employee data:', e)
+        return null
+      }
+    }
+  }
+  
+  console.log('[useChat] No company ID found')
+  return null
+}
 
 export interface Message {
   id: string
@@ -35,14 +74,15 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
   // Fetch conversations when company changes
   useEffect(() => {
     const fetchConversations = async () => {
-      if (!company?.id) {
+      const companyId = getCompanyId()
+      if (!companyId) {
         setConversations([])
         return
       }
 
       try {
         const { api } = await import("../api-client")
-        const fetchedConversations = await api.chat.listConversations(company.id)
+        const fetchedConversations = await api.chat.listConversations(companyId)
 
         // Convert to local format with messages array
         const conversationsWithMessages = await Promise.all(
@@ -87,11 +127,12 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
   }, [conversationId])
 
   const createConversation = async () => {
-    if (!company) throw new Error("No company registered")
+    const companyId = getCompanyId()
+    if (!companyId) throw new Error("No company registered")
 
     try {
       const { api } = await import("../api-client")
-      const newConversation = await api.chat.createConversation(company.id, "New Conversation")
+      const newConversation = await api.chat.createConversation(companyId, "New Conversation")
 
       const conversationWithMessages: Conversation = {
         ...newConversation,
@@ -107,7 +148,8 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
   }
 
   const sendMessage = async (content: string) => {
-    if (!company) throw new Error("No company registered")
+    const companyId = getCompanyId()
+    if (!companyId) throw new Error("No company registered")
 
     // Auto-create conversation if none exists
     let activeConversationId = conversationId
@@ -133,7 +175,7 @@ export function useChat(conversationId: string | null, onConversationCreate?: (i
         },
         body: JSON.stringify({
           query: content,
-          companyId: company.id,
+          companyId: companyId,
         }),
       })
 
