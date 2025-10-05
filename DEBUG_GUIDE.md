@@ -29,7 +29,7 @@ Registration error: TypeError: Failed to fetch
 
 **Solution:**
 1. Check backend: http://localhost:8000/api/health
-2. Check `.env.local`: `NEXT_PUBLIC_API_URL=http://localhost:8000/api`
+2. Check `.env.local`: `NEXT_PUBLIC_BACK_URI=http://localhost:8000/api`
 3. Restart `npm run dev`
 
 ### ❌ CORS Error
@@ -85,7 +85,7 @@ Check backend logs where `npm run start:dev` is running - MongoDB not connected?
 - [ ] Backend running on port 8000
 - [ ] MongoDB running/connected
 - [ ] File `.env.local` created
-- [ ] `NEXT_PUBLIC_API_URL=http://localhost:8000/api` in `.env.local`
+- [ ] `NEXT_PUBLIC_BACK_URI=http://localhost:8000/api` in `.env.local`
 - [ ] Next.js restarted after creating `.env.local`
 - [ ] http://localhost:8000/api/health returns `{"status":"healthy"}`
 - [ ] Browser console (F12) open

@@ -32,7 +32,7 @@ export default function RegisterPage() {
 
     try {
       console.log('Sending registration request:', formData)
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/companies`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/companies`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

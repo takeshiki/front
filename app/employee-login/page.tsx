@@ -23,7 +23,7 @@ export default function EmployeeLoginPage() {
 
     try {
       console.log('Employee login attempt:', { email: formData.email })
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/employees/login`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACK_URI || 'http://localhost:8000/api'}/employees/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
